@@ -32,10 +32,10 @@
 
 等待 1 到 10 分钟后，刷新 `Settings` -> `Pages`。
 
-你会看到类似这样的地址：
+你的网站地址是：
 
 ```text
-https://你的GitHub用户名.github.io/love-capsule/
+https://nosleeeeeep.github.io/love-capsule/
 ```
 
 她打开这个地址会直接看到网页，不会进入 GitHub 仓库界面。
