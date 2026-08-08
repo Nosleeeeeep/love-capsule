@@ -721,7 +721,7 @@
             })
           );
           passingShadow.name = "passingBalloonShadow";
-          passingShadow.position.set(0, 0.04, 0.05);
+          passingShadow.position.set(0.16, 0.04, 0.05);
           passingShadow.renderOrder = 10;
           group.add(passingShadow);
 
@@ -1124,7 +1124,7 @@
             const nearX = Math.max(0, 1 - Math.abs(dx) / 2.15);
             const shadowStrength = revealMemoryLayer ? nearY * nearX * 0.68 : 0;
             passingShadow.material.opacity += (shadowStrength - passingShadow.material.opacity) * 0.12;
-            passingShadow.position.x = THREE.MathUtils.clamp(dx * 0.12, -0.16, 0.16);
+            passingShadow.position.x = THREE.MathUtils.clamp(0.18 + dx * 0.12, -0.02, 0.36);
             passingShadow.position.y = THREE.MathUtils.clamp(dy * 0.08 + 0.04, -0.14, 0.16);
             passingShadow.scale.set(1.05 + nearY * 0.26, 0.92 + nearY * 0.18, 1);
           }
