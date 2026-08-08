@@ -1,62 +1,98 @@
-# GitHub Pages 胶囊链接发布步骤
+# Love Capsule
 
-这个文件夹已经包含最简单的网页文件：`index.html`。
+这是一个部署在 GitHub Pages 上的静态网页项目，用来放胶囊字条对应的网页。后续 agent 请保持项目简单：纯 HTML/CSS/JS，尽量不要引入构建工具、服务器或框架。
 
-## 1. 在 GitHub 创建仓库
+## 线上地址
 
-1. 打开 https://github.com 并登录。
-2. 点击右上角 `+`，选择 `New repository`。
-3. 仓库名填写 `love-capsule`。
-4. 选择 `Public`。
-5. 可以勾选 `Add a README file`，也可以不勾选。
-6. 点击 `Create repository`。
-
-## 2. 上传网页文件
-
-把这个文件夹里的 `index.html` 上传到仓库根目录。
-
-如果你想连说明文件也一起保存，可以同时上传 `README.md` 和 `paper-note-template.txt`。
-
-## 3. 开启 GitHub Pages
-
-1. 进入仓库页面。
-2. 点击 `Settings`。
-3. 左侧点击 `Pages`。
-4. 在 `Build and deployment` 中选择：
-   - `Source`: `Deploy from a branch`
-   - `Branch`: `main`
-   - Folder: `/root`
-5. 点击 `Save`。
-
-## 4. 获取网站地址
-
-等待 1 到 10 分钟后，刷新 `Settings` -> `Pages`。
-
-你的网站地址是：
+主页：
 
 ```text
 https://nosleeeeeep.github.io/love-capsule/
 ```
 
-她打开这个地址会直接看到网页，不会进入 GitHub 仓库界面。
-
-## 5. 生成二维码
-
-搜索 `网址生成二维码`，把上面的网站地址粘进去，保存生成的二维码。
-
-第一颗胶囊页面地址：
+第一颗胶囊：
 
 ```text
 https://nosleeeeeep.github.io/love-capsule/capsule-001.html
 ```
 
-## 6. 写进胶囊纸条
+GitHub 仓库：
 
-纸条可以使用 `paper-note-template.txt` 里的格式。
+```text
+https://github.com/Nosleeeeeep/love-capsule
+```
 
-为了长期可用：
+## 文件放置规则
 
-- 不要删除 GitHub 仓库。
-- 不要改仓库名。
-- 不要关闭 GitHub Pages。
-- 二维码下面最好手写一份网址，避免二维码磨损。
+- `index.html` 是主页，可以放所有胶囊页面的入口链接。
+- 每个独立胶囊页面放在仓库根目录，命名为 `capsule-001.html`、`capsule-002.html`、`capsule-003.html`。
+- 如果添加图片、音频或其他资源，新建 `assets/` 目录，并按页面分文件夹保存，例如 `assets/capsule-001/photo-1.jpg`。
+- 不要提交 `.tools/`，它只是本地临时工具目录，已经在 `.gitignore` 中忽略。
+
+新增网页示例：
+
+```text
+capsule-002.html
+```
+
+发布后的访问地址会是：
+
+```text
+https://nosleeeeeep.github.io/love-capsule/capsule-002.html
+```
+
+## 部署方式
+
+这个仓库已经启用 GitHub Pages：
+
+- Source: `Deploy from a branch`
+- Branch: `main`
+- Folder: `/root`
+
+部署流程：
+
+1. 在本地修改或新增 `.html` / `assets` 文件。
+2. 确认页面在本地可打开，复杂交互请用本地 HTTP 服务预览。
+3. 提交改动：
+
+   ```powershell
+   git add .
+   git commit -m "Add capsule page"
+   ```
+
+4. 推送到 GitHub：
+
+   ```powershell
+   git push
+   ```
+
+5. GitHub Pages 会自动部署，通常几十秒到几分钟后生效。
+6. 用最终 URL 验证页面是否能打开。
+
+## 本地预览
+
+简单页面可以直接双击 HTML 文件打开。涉及拖拽、动画或资源路径时，建议在项目根目录启动本地 HTTP 服务：
+
+```powershell
+python -m http.server 8000 --bind 127.0.0.1
+```
+
+然后访问：
+
+```text
+http://127.0.0.1:8000/capsule-001.html
+```
+
+## 当前页面
+
+- `index.html`: 胶囊主页，包含第一颗胶囊入口。
+- `capsule-001.html`: 第一颗胶囊页面。气球绑着信纸，向下拉后放飞，经过云和照片占位，最后气球爆开并展开信纸。
+- `paper-note-template.txt`: 胶囊纸条文字模板。
+
+## 给后续 agent 的注意事项
+
+- 保持所有链接相对路径可用，例如从主页链接到 `capsule-001.html`。
+- 新增页面后，同步更新 `index.html` 的入口和本 README 的“当前页面”列表。
+- 公开仓库和 GitHub Pages 页面都是公开可访问的，不要放真实住址、手机号、身份证、私密账号或其他敏感信息。
+- 照片资源尽量压缩，避免大文件影响手机加载。
+- 不要改仓库名、默认分支或 GitHub Pages 设置，除非用户明确要求。
