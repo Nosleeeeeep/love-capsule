@@ -673,14 +673,14 @@
 
       function createPhotos() {
         const positions = [
-          { desktop: [-3.65, 4.1, -1.55, 0.22], mobile: [-0.52, 4.05, -1.5, 0.08] },
-          { desktop: [3.75, 6.5, -2.25, -0.2], mobile: [0.54, 6.25, -1.48, -0.07] },
-          { desktop: [-4.05, 9.1, -1.95, -0.14], mobile: [-0.56, 8.65, -1.5, -0.05] },
-          { desktop: [4.05, 11.8, -1.5, 0.18], mobile: [0.58, 11.1, -1.46, 0.07] },
-          { desktop: [-3.45, 14.3, -2.35, 0.12], mobile: [-0.5, 13.65, -1.52, 0.05] },
-          { desktop: [3.65, 16.8, -1.8, -0.18], mobile: [0.52, 16.1, -1.5, -0.06] },
-          { desktop: [-4.05, 20.3, -2.1, 0.2], mobile: [-0.56, 19.25, -1.51, 0.07] },
-          { desktop: [3.92, 23.0, -1.65, -0.12], mobile: [0.54, 21.8, -1.48, -0.05] }
+          { desktop: [-3.65, 4.1, -1.55, 0.22], mobile: [-0.78, 4.05, -1.62, 0.1] },
+          { desktop: [3.75, 6.5, -2.25, -0.2], mobile: [0.8, 6.25, -1.6, -0.09] },
+          { desktop: [-4.05, 9.1, -1.95, -0.14], mobile: [-0.82, 8.65, -1.62, -0.07] },
+          { desktop: [4.05, 11.8, -1.5, 0.18], mobile: [0.84, 11.1, -1.58, 0.09] },
+          { desktop: [-3.45, 14.3, -2.35, 0.12], mobile: [-0.76, 13.65, -1.64, 0.07] },
+          { desktop: [3.65, 16.8, -1.8, -0.18], mobile: [0.78, 16.1, -1.62, -0.08] },
+          { desktop: [-4.05, 20.3, -2.1, 0.2], mobile: [-0.82, 19.25, -1.63, 0.09] },
+          { desktop: [3.92, 23.0, -1.65, -0.12], mobile: [0.8, 21.8, -1.6, -0.07] }
         ];
 
         positions.forEach(({ desktop, mobile }, index) => {
@@ -710,6 +710,20 @@
           image.position.z = 0.032;
           image.position.y = 0.09;
           group.add(image);
+
+          const passingShadow = new THREE.Mesh(
+            new THREE.PlaneGeometry(1.8, 1.18),
+            new THREE.MeshBasicMaterial({
+              map: makeBalloonShadowTexture(),
+              transparent: true,
+              opacity: 0,
+              depthWrite: false
+            })
+          );
+          passingShadow.name = "passingBalloonShadow";
+          passingShadow.position.set(0, 0.04, 0.05);
+          passingShadow.renderOrder = 10;
+          group.add(passingShadow);
 
           photoGroup.add(group);
         });
@@ -807,6 +821,22 @@
         ctx.fillText(`Photo ${number}`, 256, 185);
       }
 
+      function makeBalloonShadowTexture() {
+        const textureCanvas = document.createElement("canvas");
+        textureCanvas.width = 256;
+        textureCanvas.height = 256;
+        const ctx = textureCanvas.getContext("2d");
+        const gradient = ctx.createRadialGradient(128, 128, 12, 128, 128, 120);
+        gradient.addColorStop(0, "rgba(55, 38, 30, 0.72)");
+        gradient.addColorStop(0.45, "rgba(55, 38, 30, 0.32)");
+        gradient.addColorStop(1, "rgba(67, 48, 37, 0)");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 256, 256);
+        const texture = new THREE.CanvasTexture(textureCanvas);
+        texture.colorSpace = THREE.SRGBColorSpace;
+        return texture;
+      }
+
       function resize() {
         const width = window.innerWidth;
         const height = window.innerHeight;
@@ -835,7 +865,7 @@
         photoGroup.children.forEach((photo) => {
           const [x, y, z, rot] = mobile ? photo.userData.mobilePosition : photo.userData.desktopPosition;
           photo.position.set(x, y, z);
-          photo.scale.setScalar(mobile ? 0.48 : 1);
+          photo.scale.setScalar(mobile ? 0.6 : 1);
           photo.userData.baseX = x;
           photo.userData.baseRotation = rot;
         });
@@ -1085,6 +1115,19 @@
           photo.position.x = photo.userData.baseX + Math.sin(time * 0.28 + photo.userData.phase) * (window.innerWidth < 680 ? 0.06 : 0.12);
           photo.lookAt(camera.position);
           photo.rotateZ(photo.userData.baseRotation + Math.sin(time * 0.45 + photo.userData.phase) * 0.035);
+
+          const passingShadow = photo.getObjectByName("passingBalloonShadow");
+          if (passingShadow) {
+            const dx = flightGroup.position.x - photo.position.x;
+            const dy = flightGroup.position.y - photo.position.y;
+            const nearY = Math.max(0, 1 - Math.abs(dy) / 2.55);
+            const nearX = Math.max(0, 1 - Math.abs(dx) / 2.15);
+            const shadowStrength = revealMemoryLayer ? nearY * nearX * 0.68 : 0;
+            passingShadow.material.opacity += (shadowStrength - passingShadow.material.opacity) * 0.12;
+            passingShadow.position.x = THREE.MathUtils.clamp(dx * 0.12, -0.16, 0.16);
+            passingShadow.position.y = THREE.MathUtils.clamp(dy * 0.08 + 0.04, -0.14, 0.16);
+            passingShadow.scale.set(1.05 + nearY * 0.26, 0.92 + nearY * 0.18, 1);
+          }
         });
       }
 
