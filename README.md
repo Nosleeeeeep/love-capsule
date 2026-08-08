@@ -44,6 +44,12 @@ https://nosleeeeeep.github.io/love-capsule/
 
 搜索 `网址生成二维码`，把上面的网站地址粘进去，保存生成的二维码。
 
+第一颗胶囊页面地址：
+
+```text
+https://nosleeeeeep.github.io/love-capsule/capsule-001.html
+```
+
 ## 6. 写进胶囊纸条
 
 纸条可以使用 `paper-note-template.txt` 里的格式。

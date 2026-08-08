@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第一颗胶囊</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --sky-top: #8ec7f3;
+      --sky-mid: #d8efff;
+      --sky-low: #fff4df;
+      --ink: #3d2d25;
+      --paper: #fff7e6;
+      --paper-edge: #e7cfa5;
+      --thread: #9b5b45;
+      --red: #e85f5c;
+      --red-dark: #bf3f42;
+      --cloud: rgba(255, 255, 255, 0.9);
+      --shadow: rgba(57, 44, 31, 0.18);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      overflow: hidden;
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", Arial, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 48%, var(--sky-low) 100%);
+    }
+
+    body {
+      min-height: 100vh;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .scene {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .sun-glow {
+      position: absolute;
+      right: 9vw;
+      top: 9vh;
+      width: min(28vw, 260px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 236, 173, 0.95), rgba(255, 236, 173, 0.2) 58%, transparent 70%);
+      filter: blur(2px);
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    .cloud-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      transform: translateY(0);
+      transition: transform 5.8s cubic-bezier(0.18, 0.76, 0.22, 1);
+    }
+
+    .cloud {
+      position: absolute;
+      width: clamp(130px, 19vw, 250px);
+      height: clamp(54px, 7.5vw, 92px);
+      opacity: 0.88;
+      animation: drift 11s ease-in-out infinite alternate;
+    }
+
+    .cloud::before,
+    .cloud::after,
+    .cloud span {
+      content: "";
+      position: absolute;
+      display: block;
+      background: var(--cloud);
+      box-shadow: 0 18px 28px rgba(88, 130, 157, 0.13);
+    }
+
+    .cloud::before {
+      left: 9%;
+      bottom: 0;
+      width: 82%;
+      height: 54%;
+      border-radius: 999px;
+    }
+
+    .cloud::after {
+      left: 24%;
+      bottom: 24%;
+      width: 34%;
+      height: 66%;
+      border-radius: 50%;
+    }
+
+    .cloud span {
+      right: 17%;
+      bottom: 20%;
+      width: 42%;
+      height: 78%;
+      border-radius: 50%;
+    }
+
+    .cloud-1 { left: 7vw; top: 16vh; animation-delay: -2s; }
+    .cloud-2 { right: 8vw; top: 30vh; transform: scale(0.9); animation-delay: -5s; }
+    .cloud-3 { left: 15vw; bottom: 18vh; transform: scale(1.08); animation-delay: -7s; }
+    .cloud-4 { right: 18vw; bottom: 9vh; transform: scale(0.74); animation-delay: -1s; }
+
+    .photo-cloud {
+      position: absolute;
+      width: clamp(120px, 17vw, 190px);
+      padding: 10px 10px 28px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 18px 35px rgba(67, 82, 96, 0.16);
+      transform: rotate(var(--tilt));
+      animation: photoFloat 8s ease-in-out infinite alternate;
+    }
+
+    .photo-cloud::before {
+      content: "";
+      position: absolute;
+      inset: auto 14px 9px;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(232, 95, 92, 0.18);
+    }
+
+    .photo-slot {
+      display: grid;
+      place-items: center;
+      aspect-ratio: 4 / 3;
+      border-radius: 5px;
+      overflow: hidden;
+      border: 1px dashed rgba(132, 118, 103, 0.45);
+      background:
+        linear-gradient(135deg, rgba(255, 232, 193, 0.75), rgba(187, 224, 244, 0.85)),
+        repeating-linear-gradient(45deg, transparent 0 10px, rgba(255, 255, 255, 0.32) 10px 20px);
+      color: rgba(61, 45, 37, 0.64);
+      font-size: clamp(12px, 1.8vw, 14px);
+      letter-spacing: 0;
+    }
+
+    .photo-1 { left: 10vw; top: 8vh; --tilt: -8deg; animation-delay: -1s; }
+    .photo-2 { right: 12vw; top: 18vh; --tilt: 7deg; animation-delay: -3s; }
+    .photo-3 { left: 16vw; top: 48vh; --tilt: 5deg; animation-delay: -5s; }
+    .photo-4 { right: 18vw; top: 58vh; --tilt: -6deg; animation-delay: -2s; }
+
+    .carrier {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: min(56vw, 310px);
+      height: 430px;
+      transform: translate(-50%, -43%) translateY(var(--pull, 0px));
+      cursor: grab;
+      transition: transform 0.18s ease-out;
+      z-index: 4;
+    }
+
+    .carrier:active {
+      cursor: grabbing;
+    }
+
+    .balloon {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      width: min(46vw, 220px);
+      aspect-ratio: 0.82;
+      transform: translateX(-50%);
+      border-radius: 50% 50% 45% 45%;
+      background:
+        radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.74) 0 12%, transparent 13%),
+        radial-gradient(circle at 60% 70%, rgba(191, 63, 66, 0.18), transparent 48%),
+        linear-gradient(145deg, #ff8b80 0%, var(--red) 58%, var(--red-dark) 100%);
+      box-shadow: inset -18px -28px 34px rgba(115, 31, 40, 0.22), 0 24px 40px rgba(73, 91, 114, 0.19);
+      transform-origin: 50% 88%;
+      animation: breathe 3.4s ease-in-out infinite;
+    }
+
+    .balloon::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -16px;
+      width: 24px;
+      height: 24px;
+      background: var(--red-dark);
+      clip-path: polygon(50% 0, 100% 100%, 0 100%);
+      transform: translateX(-50%);
+    }
+
+    .string {
+      position: absolute;
+      left: 50%;
+      top: 230px;
+      width: 2px;
+      height: 98px;
+      background: linear-gradient(var(--thread), rgba(155, 91, 69, 0.45));
+      transform: translateX(-50%);
+    }
+
+    .letter-pack {
+      position: absolute;
+      left: 50%;
+      top: 314px;
+      width: min(48vw, 235px);
+      height: 128px;
+      transform: translateX(-50%) rotate(-2deg);
+      filter: drop-shadow(0 18px 20px rgba(64, 48, 36, 0.17));
+    }
+
+    .letter-bundle {
+      position: absolute;
+      inset: 0;
+      border-radius: 8px;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.4), transparent 45%),
+        linear-gradient(180deg, #fff8e8, #f4dfbd);
+      border: 2px solid var(--paper-edge);
+      overflow: hidden;
+    }
+
+    .letter-bundle::before,
+    .letter-bundle::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(32deg, transparent 49%, rgba(198, 157, 102, 0.34) 50%, transparent 51%);
+    }
+
+    .letter-bundle::after {
+      background: linear-gradient(148deg, transparent 49%, rgba(198, 157, 102, 0.3) 50%, transparent 51%);
+    }
+
+    .ribbon {
+      position: absolute;
+      left: 50%;
+      top: -8px;
+      width: 34px;
+      height: 144px;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: linear-gradient(90deg, #9a523f, #c7785d, #9a523f);
+      box-shadow: 0 0 0 1px rgba(91, 52, 38, 0.18);
+    }
+
+    .ribbon::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 48%;
+      width: 72px;
+      height: 34px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #d58a6d, #9a523f);
+      transform: translate(-50%, -50%);
+      box-shadow: 0 5px 9px rgba(73, 48, 34, 0.15);
+    }
+
+    .hint {
+      position: absolute;
+      left: 50%;
+      bottom: clamp(24px, 8vh, 72px);
+      width: min(88vw, 460px);
+      padding: 14px 18px;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.42);
+      box-shadow: 0 12px 30px rgba(62, 88, 112, 0.13);
+      transform: translateX(-50%);
+      text-align: center;
+      font-size: clamp(14px, 2.6vw, 17px);
+      backdrop-filter: blur(9px);
+      z-index: 5;
+      transition: opacity 0.45s ease, transform 0.45s ease;
+    }
+
+    .progress-track {
+      position: absolute;
+      left: 50%;
+      top: -18px;
+      width: 140px;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.56);
+      transform: translateX(-50%);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      display: block;
+      width: calc(var(--pull-progress, 0) * 100%);
+      height: 100%;
+      background: var(--red);
+      transition: width 0.12s ease;
+    }
+
+    .open-letter {
+      position: absolute;
+      left: 50%;
+      top: 52%;
+      width: min(88vw, 620px);
+      min-height: min(70vh, 500px);
+      padding: clamp(28px, 6vw, 52px);
+      border-radius: 9px;
+      border: 2px solid var(--paper-edge);
+      background:
+        linear-gradient(90deg, rgba(211, 170, 106, 0.11) 1px, transparent 1px) 0 0 / 34px 34px,
+        linear-gradient(#fffaf0, var(--paper));
+      box-shadow: 0 34px 80px rgba(61, 45, 37, 0.24);
+      transform: translate(-50%, -50%) scale(0.78) rotate(-2deg);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 7;
+    }
+
+    .open-letter h1 {
+      margin: 0 0 22px;
+      font-size: clamp(28px, 8vw, 54px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .open-letter p {
+      margin: 0 0 16px;
+      font-size: clamp(16px, 3.4vw, 22px);
+      line-height: 1.75;
+    }
+
+    .fill-line {
+      display: block;
+      height: 1.9em;
+      margin-top: 14px;
+      border-bottom: 1px dashed rgba(95, 72, 53, 0.36);
+    }
+
+    .pop {
+      position: absolute;
+      left: 50%;
+      top: 44%;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      z-index: 6;
+      pointer-events: none;
+    }
+
+    .pop span {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 8px;
+      height: 72px;
+      border-radius: 999px;
+      background: rgba(232, 95, 92, 0.82);
+      transform-origin: 50% 0;
+    }
+
+    .pop span:nth-child(1) { transform: rotate(0deg) translateY(-20px); }
+    .pop span:nth-child(2) { transform: rotate(45deg) translateY(-20px); }
+    .pop span:nth-child(3) { transform: rotate(90deg) translateY(-20px); }
+    .pop span:nth-child(4) { transform: rotate(135deg) translateY(-20px); }
+    .pop span:nth-child(5) { transform: rotate(180deg) translateY(-20px); }
+    .pop span:nth-child(6) { transform: rotate(225deg) translateY(-20px); }
+    .pop span:nth-child(7) { transform: rotate(270deg) translateY(-20px); }
+    .pop span:nth-child(8) { transform: rotate(315deg) translateY(-20px); }
+
+    .scene.flying .carrier {
+      animation: flyAway 6.2s cubic-bezier(0.18, 0.76, 0.18, 1) forwards;
+    }
+
+    .scene.flying .cloud-layer {
+      transform: translateY(42vh);
+    }
+
+    .scene.flying .hint {
+      opacity: 0;
+      transform: translateX(-50%) translateY(18px);
+      pointer-events: none;
+    }
+
+    .scene.popped .balloon {
+      animation: balloonPop 0.42s ease-out forwards;
+    }
+
+    .scene.popped .string {
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .scene.popped .pop {
+      animation: burst 0.54s ease-out forwards;
+    }
+
+    .scene.opened .carrier {
+      opacity: 0;
+      transition: opacity 0.45s ease;
+    }
+
+    .scene.opened .open-letter {
+      animation: unfold 1.1s cubic-bezier(0.18, 0.8, 0.2, 1) forwards;
+      pointer-events: auto;
+    }
+
+    @keyframes breathe {
+      0%, 100% { transform: translateX(-50%) rotate(-1deg) scale(1); }
+      50% { transform: translateX(-50%) rotate(1deg) scale(1.025); }
+    }
+
+    @keyframes drift {
+      from { margin-left: -12px; }
+      to { margin-left: 18px; }
+    }
+
+    @keyframes photoFloat {
+      from { translate: 0 -8px; }
+      to { translate: 0 12px; }
+    }
+
+    @keyframes flyAway {
+      0% { transform: translate(-50%, -43%) translateY(var(--pull, 0px)); }
+      35% { transform: translate(-50%, -84%) translateY(-20vh) rotate(2deg); }
+      74% { transform: translate(-50%, -122%) translateY(-38vh) rotate(-3deg); }
+      100% { transform: translate(-50%, -137%) translateY(-40vh) rotate(0deg); }
+    }
+
+    @keyframes balloonPop {
+      0% { opacity: 1; transform: translateX(-50%) scale(1); }
+      75% { opacity: 0.7; transform: translateX(-50%) scale(1.16); }
+      100% { opacity: 0; transform: translateX(-50%) scale(0.05); }
+    }
+
+    @keyframes burst {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+      40% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1.8); }
+    }
+
+    @keyframes unfold {
+      0% { opacity: 0; transform: translate(-50%, -42%) scale(0.78) rotate(-3deg); }
+      62% { opacity: 1; transform: translate(-50%, -50%) scale(1.03) rotate(1deg); }
+      100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); }
+    }
+
+    @media (max-width: 640px) {
+      .carrier {
+        width: 78vw;
+        height: 410px;
+        transform: translate(-50%, -42%) translateY(var(--pull, 0px));
+      }
+
+      .string {
+        top: 218px;
+      }
+
+      .letter-pack {
+        top: 300px;
+      }
+
+      .photo-1 { left: 4vw; top: 7vh; }
+      .photo-2 { right: 3vw; top: 23vh; }
+      .photo-3 { left: 5vw; top: 58vh; }
+      .photo-4 { right: 6vw; top: 69vh; }
+    }
+  </style>
+</head>
+<body>
+  <main class="scene" id="scene">
+    <div class="sun-glow"></div>
+
+    <section class="cloud-layer" aria-hidden="true">
+      <div class="cloud cloud-1"><span></span></div>
+      <div class="cloud cloud-2"><span></span></div>
+      <div class="cloud cloud-3"><span></span></div>
+      <div class="cloud cloud-4"><span></span></div>
+
+      <figure class="photo-cloud photo-1">
+        <div class="photo-slot">照片 1</div>
+      </figure>
+      <figure class="photo-cloud photo-2">
+        <div class="photo-slot">照片 2</div>
+      </figure>
+      <figure class="photo-cloud photo-3">
+        <div class="photo-slot">照片 3</div>
+      </figure>
+      <figure class="photo-cloud photo-4">
+        <div class="photo-slot">照片 4</div>
+      </figure>
+    </section>
+
+    <div class="carrier" id="carrier" role="button" tabindex="0" aria-label="往下拉气球，放飞第一颗胶囊">
+      <div class="balloon"></div>
+      <div class="string"></div>
+      <div class="letter-pack">
+        <div class="letter-bundle"></div>
+        <div class="ribbon"></div>
+      </div>
+    </div>
+
+    <div class="pop" aria-hidden="true">
+      <span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span>
+    </div>
+
+    <div class="hint" id="hint">
+      <span class="progress-track"><span class="progress-fill"></span></span>
+      用鼠标或手指把气球往下拉一下，然后松开
+    </div>
+
+    <article class="open-letter" aria-live="polite">
+      <h1>给你的第一封信</h1>
+      <p>这里先留给我慢慢写。</p>
+      <p>等你打开这颗胶囊的时候，我想让你看到的是：</p>
+      <span class="fill-line"></span>
+      <span class="fill-line"></span>
+      <span class="fill-line"></span>
+    </article>
+  </main>
+
+  <script>
+    const scene = document.querySelector("#scene");
+    const carrier = document.querySelector("#carrier");
+    const maxPull = 115;
+    let startY = 0;
+    let pulling = false;
+    let released = false;
+
+    function setPull(value) {
+      const pull = Math.max(0, Math.min(maxPull, value));
+      scene.style.setProperty("--pull", `${pull}px`);
+      scene.style.setProperty("--pull-progress", pull / maxPull);
+      return pull;
+    }
+
+    function launch() {
+      if (released) return;
+      released = true;
+      scene.classList.add("flying");
+      setTimeout(() => scene.classList.add("popped"), 5200);
+      setTimeout(() => scene.classList.add("opened"), 5850);
+    }
+
+    function resetPull() {
+      setPull(0);
+    }
+
+    carrier.addEventListener("pointerdown", (event) => {
+      if (released) return;
+      pulling = true;
+      startY = event.clientY;
+      carrier.setPointerCapture(event.pointerId);
+    });
+
+    carrier.addEventListener("pointermove", (event) => {
+      if (!pulling || released) return;
+      setPull(event.clientY - startY);
+    });
+
+    carrier.addEventListener("pointerup", () => {
+      if (!pulling || released) return;
+      pulling = false;
+      const currentPull = parseFloat(getComputedStyle(scene).getPropertyValue("--pull")) || 0;
+      if (currentPull > 70) {
+        launch();
+      } else {
+        resetPull();
+      }
+    });
+
+    carrier.addEventListener("pointercancel", () => {
+      pulling = false;
+      if (!released) resetPull();
+    });
+
+    carrier.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        launch();
+      }
+    });
+  </script>
+</body>
+</html>
