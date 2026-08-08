@@ -4,9 +4,78 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>给你的胶囊</title>
+  <style>
+    :root {
+      color: #4d3328;
+      background: #fff6e8;
+      font-family: "Georgia", "Times New Roman", "Noto Serif SC", serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 28px;
+      background:
+        radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.95), transparent 22%),
+        radial-gradient(circle at 88% 84%, rgba(232, 171, 142, 0.36), transparent 28%),
+        linear-gradient(135deg, #fff8ed, #f4dcc1);
+    }
+
+    main {
+      width: min(92vw, 620px);
+      padding: clamp(28px, 8vw, 54px);
+      border: 1px solid rgba(105, 70, 43, 0.16);
+      border-radius: 18px;
+      background:
+        linear-gradient(116deg, rgba(255, 255, 255, 0.7), rgba(255, 248, 231, 0.86)),
+        repeating-linear-gradient(88deg, rgba(102, 67, 37, 0.035) 0 1px, transparent 1px 8px);
+      box-shadow: 0 28px 60px rgba(83, 56, 36, 0.16);
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0 0 16px;
+      font-size: clamp(32px, 8vw, 58px);
+      font-weight: 500;
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0 auto 28px;
+      max-width: 28em;
+      font-size: clamp(16px, 3.6vw, 19px);
+      line-height: 1.8;
+    }
+
+    a {
+      display: inline-block;
+      padding: 12px 20px;
+      border-radius: 999px;
+      background: #9f2634;
+      color: #fff8ef;
+      text-decoration: none;
+      box-shadow: 0 16px 30px rgba(113, 29, 40, 0.22);
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    a:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 34px rgba(113, 29, 40, 0.28);
+    }
+  </style>
 </head>
 <body>
-  <h1>如果你打开了这个，说明你有一点点想我。</h1>
-  <p>暑假快乐，我也在想你。</p>
+  <main>
+    <h1>给你的胶囊</h1>
+    <p>如果你打开了这里，说明有一张纸条把你带到了另一个小小的地方。</p>
+    <a href="note-link-001.html">打开第一封信</a>
+  </main>
 </body>
 </html>

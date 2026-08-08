@@ -1,0 +1,1041 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>飞上云端的信</title>
+  <style>
+    :root {
+      --ink: #4b3329;
+      --paper: #fff3d7;
+      --paper-edge: #dcc18b;
+      --glass: rgba(255, 255, 255, 0.54);
+      font-family: Georgia, "Times New Roman", "Noto Serif SC", serif;
+      color: var(--ink);
+      background: #d9f2ff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 78% 16%, rgba(255, 246, 203, 0.78), rgba(255, 225, 174, 0.24) 18%, transparent 34%),
+        linear-gradient(180deg, #cfeeff 0%, #f7fbff 52%, #ffe3ca 100%);
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100svh;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .stage {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    #scene {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+    }
+
+    .is-dragging #scene {
+      cursor: grabbing;
+    }
+
+    .hint {
+      position: absolute;
+      left: calc(50% + 86px);
+      top: clamp(134px, 25vh, 190px);
+      z-index: 10;
+      width: 54px;
+      height: 112px;
+      margin: 0;
+      transform: translateX(-50%);
+      transition: opacity 500ms ease, transform 500ms ease;
+      pointer-events: none;
+    }
+
+    .hint::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 4px;
+      width: 4px;
+      height: 54px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(126, 89, 64, 0), rgba(126, 89, 64, 0.82));
+      box-shadow: 0 10px 20px rgba(91, 69, 50, 0.12);
+      transform: translateX(-50%);
+      animation: arrow-swipe 1.55s ease-in-out infinite;
+    }
+
+    .hint::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 48px;
+      width: 22px;
+      height: 22px;
+      border-right: 4px solid rgba(126, 89, 64, 0.82);
+      border-bottom: 4px solid rgba(126, 89, 64, 0.82);
+      border-radius: 3px;
+      filter: drop-shadow(0 10px 14px rgba(91, 69, 50, 0.12));
+      transform: translateX(-50%) rotate(45deg);
+      animation: arrow-head-swipe 1.55s ease-in-out infinite;
+    }
+
+    .started .hint {
+      opacity: 0;
+      transform: translate(-50%, -14px);
+    }
+
+    @keyframes arrow-swipe {
+      0%,
+      100% {
+        opacity: 0;
+        transform: translate(-50%, 0) scaleY(0.72);
+      }
+      20%,
+      64% {
+        opacity: 0.82;
+      }
+      68% {
+        transform: translate(-50%, 34px) scaleY(1);
+      }
+      88% {
+        opacity: 0;
+        transform: translate(-50%, 44px) scaleY(0.9);
+      }
+    }
+
+    @keyframes arrow-head-swipe {
+      0%,
+      100% {
+        opacity: 0;
+        transform: translate(-50%, 0) rotate(45deg) scale(0.82);
+      }
+      20%,
+      64% {
+        opacity: 0.82;
+      }
+      68% {
+        transform: translate(-50%, 34px) rotate(45deg) scale(1);
+      }
+      88% {
+        opacity: 0;
+        transform: translate(-50%, 44px) rotate(45deg) scale(0.92);
+      }
+    }
+
+    @media (max-width: 680px) {
+      .hint {
+        left: calc(50% + 70px);
+        top: clamp(176px, 23vh, 216px);
+        transform: translateX(-50%) scale(0.92);
+      }
+    }
+
+    .letter-panel {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      z-index: 11;
+      width: min(88vw, 560px);
+      min-height: min(70vh, 500px);
+      padding: clamp(28px, 7vw, 48px);
+      border: 1px solid rgba(115, 82, 43, 0.22);
+      border-radius: 15px;
+      background:
+        linear-gradient(118deg, rgba(255, 255, 255, 0.34), transparent 28%),
+        repeating-linear-gradient(86deg, rgba(112, 73, 34, 0.042) 0 1px, transparent 1px 8px),
+        linear-gradient(135deg, #fff9e8, #ecd2a1);
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.36),
+        inset -22px -26px 42px rgba(134, 93, 40, 0.15),
+        0 34px 70px rgba(69, 49, 34, 0.22);
+      opacity: 0;
+      transform: translate(-50%, -46%) scale(0.88) rotateX(8deg);
+      transform-origin: 50% 50%;
+      transition: opacity 850ms ease, transform 850ms cubic-bezier(0.16, 0.78, 0.2, 1);
+      pointer-events: none;
+    }
+
+    .opened .letter-panel {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1) rotateX(0deg);
+      pointer-events: auto;
+    }
+
+    .letter-panel h1 {
+      margin: 0 0 18px;
+      font-size: clamp(26px, 6vw, 42px);
+      font-weight: 500;
+      line-height: 1.06;
+      letter-spacing: 0;
+    }
+
+    .letter-panel p {
+      margin: 10px 0;
+      font-size: clamp(14px, 3.2vw, 18px);
+      line-height: 1.8;
+    }
+
+    .fill-line {
+      display: inline-block;
+      width: min(52vw, 250px);
+      height: 0.9em;
+      margin: 0 4px;
+      border-bottom: 1px solid rgba(77, 52, 35, 0.46);
+      vertical-align: -0.1em;
+    }
+
+    .signature {
+      display: grid;
+      justify-content: end;
+      margin-top: 20px;
+      text-align: right;
+    }
+
+    .signature svg {
+      width: min(44vw, 210px);
+      height: 104px;
+      overflow: visible;
+    }
+
+    .signature text {
+      font-family: "STXingkai", "KaiTi", "Noto Serif SC", serif;
+      fill: transparent;
+      stroke: #4f3327;
+      stroke-width: 0.55;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 260;
+      stroke-dashoffset: 260;
+    }
+
+    .signature .name-char {
+      font-size: 31px;
+    }
+
+    .signature .date-char {
+      font-size: 18px;
+      stroke-width: 0.36;
+      stroke: rgba(79, 51, 39, 0.88);
+      stroke-dasharray: 180;
+      stroke-dashoffset: 180;
+    }
+
+    .opened .signature .name-char {
+      animation: draw-signature-text 1.05s ease forwards, fill-signature-text 360ms ease forwards;
+      animation-delay: calc(850ms + var(--i) * 520ms), calc(1450ms + var(--i) * 520ms);
+    }
+
+    .opened .signature .date-char {
+      animation: draw-signature-text 0.5s ease forwards, fill-signature-text 260ms ease forwards;
+      animation-delay: calc(2700ms + var(--i) * 145ms), calc(3000ms + var(--i) * 145ms);
+    }
+
+    @keyframes draw-signature-text {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    @keyframes fill-signature-text {
+      to {
+        fill: #4f3327;
+      }
+    }
+
+    .restart {
+      position: absolute;
+      right: clamp(16px, 4vw, 34px);
+      bottom: clamp(16px, 4vw, 34px);
+      z-index: 12;
+      padding: 10px 15px;
+      border: 1px solid rgba(90, 66, 49, 0.18);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.62);
+      color: var(--ink);
+      box-shadow: 0 16px 34px rgba(73, 72, 70, 0.13);
+      backdrop-filter: blur(14px);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 450ms ease, transform 450ms ease;
+      pointer-events: none;
+    }
+
+    .opened .restart {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .fallback {
+      position: absolute;
+      inset: auto 18px 18px;
+      z-index: 20;
+      display: none;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.72);
+      box-shadow: 0 18px 40px rgba(54, 61, 70, 0.16);
+      font: 14px/1.5 system-ui, sans-serif;
+    }
+
+    .no-webgl .fallback {
+      display: block;
+    }
+
+    @media (max-width: 680px) {
+      .letter-panel {
+        width: min(91vw, 560px);
+        min-height: min(72vh, 500px);
+        padding: 28px 26px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="stage" id="stage" aria-label="飞上云端的信纸互动页">
+    <canvas id="scene" aria-label="3D 气球和信纸场景"></canvas>
+    <p class="hint" aria-label="向下拖动气球"></p>
+    <article class="letter-panel" aria-label="打开后的信纸内容">
+      <h1>亲爱的小瞿：</h1>
+      <p>这封信已经在天上飘了<span id="flight-days">xx</span>天了，终于被你捕获了🥰看着这些照片定格的那一瞬间的快乐，幸福，爱……我们一起经历了好多，我很幸运遇到了你，你告诉我爱是什么，也是你教会我如何去爱。我们的爱托举着气球上升，而我想这只气球永远飞向蓝天</p>
+      <div class="signature" aria-label="李海旗，2026.8.6">
+        <svg viewBox="0 0 220 112" role="img" aria-hidden="true">
+          <text class="name-char" style="--i: 0" x="44" y="42">李</text>
+          <text class="name-char" style="--i: 1" x="84" y="42">海</text>
+          <text class="name-char" style="--i: 2" x="124" y="42">旗</text>
+          <text class="date-char" style="--i: 0" x="54" y="78">2</text>
+          <text class="date-char" style="--i: 1" x="70" y="78">0</text>
+          <text class="date-char" style="--i: 2" x="86" y="78">2</text>
+          <text class="date-char" style="--i: 3" x="102" y="78">6</text>
+          <text class="date-char" style="--i: 4" x="118" y="78">.</text>
+          <text class="date-char" style="--i: 5" x="128" y="78">8</text>
+          <text class="date-char" style="--i: 6" x="144" y="78">.</text>
+          <text class="date-char" style="--i: 7" x="154" y="78">6</text>
+        </svg>
+      </div>
+    </article>
+    <button class="restart" id="restart" type="button">再看一次</button>
+    <p class="fallback">这个页面需要浏览器支持 WebGL。请换一个现代浏览器再打开。</p>
+  </main>
+
+  <script type="module">
+    const THREE_URL = "https://unpkg.com/three@0.160.0/build/three.module.js";
+    const stage = document.getElementById("stage");
+    const canvas = document.getElementById("scene");
+    const restart = document.getElementById("restart");
+    const flightDays = document.getElementById("flight-days");
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let THREE;
+
+    try {
+      THREE = await import(THREE_URL);
+      boot();
+    } catch (error) {
+      stage.classList.add("no-webgl");
+      console.error(error);
+    }
+
+    function boot() {
+      const renderer = new THREE.WebGLRenderer({
+        canvas,
+        antialias: true,
+        alpha: true,
+        preserveDrawingBuffer: true,
+        powerPreference: "high-performance"
+      });
+
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+      const scene = new THREE.Scene();
+      scene.fog = new THREE.Fog(0xdff4ff, 10, 50);
+
+      const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 120);
+      const cameraTarget = new THREE.Vector3(0, 0.15, 0);
+      const cameraLook = new THREE.Vector3(0, 0, 0);
+      const raycaster = new THREE.Raycaster();
+      const pointer = new THREE.Vector2();
+      const clock = new THREE.Clock();
+
+      const state = {
+        mode: "idle",
+        elapsed: 0,
+        pull: 0,
+        dragStartY: 0,
+        activePointerId: null,
+        flightStartY: 0,
+        flightTargetY: reducedMotion ? 6 : 26,
+        burstStarted: false,
+        opened: false,
+        viewportScale: 1
+      };
+      window.__noteScene = {
+        get mode() {
+          return state.mode;
+        },
+        get opened() {
+          return state.opened;
+        },
+        get flightY() {
+          return flightGroup.position.y;
+        },
+        get visibleFragments() {
+          return burstParticles.children.filter((shard) => shard.visible && shard.material.opacity > 0.05).length;
+        }
+      };
+
+      const sceneRoot = new THREE.Group();
+      const flightGroup = new THREE.Group();
+      const ropeGroup = new THREE.Group();
+      const letterGroup = new THREE.Group();
+      const cloudGroup = new THREE.Group();
+      const photoGroup = new THREE.Group();
+      const burstParticles = new THREE.Group();
+      scene.add(sceneRoot);
+      sceneRoot.add(cloudGroup, photoGroup, flightGroup, burstParticles);
+      flightGroup.add(ropeGroup, letterGroup);
+
+      const balloonMesh = createBalloon();
+      flightGroup.add(balloonMesh);
+
+      createLetter();
+      createRopes();
+      createClouds();
+      createPhotos();
+      createBurstParticles();
+      createLighting();
+      resize();
+      resetScene();
+      animate();
+
+      window.addEventListener("resize", resize);
+      canvas.addEventListener("pointerdown", onPointerDown);
+      canvas.addEventListener("pointermove", onPointerMove);
+      canvas.addEventListener("pointerup", onPointerUp);
+      canvas.addEventListener("pointercancel", onPointerCancel);
+      restart.addEventListener("click", resetScene);
+
+      function createLighting() {
+        scene.add(new THREE.HemisphereLight(0xffffff, 0xd9b58c, 2.1));
+
+        const sun = new THREE.DirectionalLight(0xfff6dc, 3.2);
+        sun.position.set(7, 10, 7);
+        sun.castShadow = true;
+        sun.shadow.mapSize.set(1024, 1024);
+        scene.add(sun);
+
+        const fill = new THREE.DirectionalLight(0xb4ddff, 1.2);
+        fill.position.set(-6, 4, 3);
+        scene.add(fill);
+      }
+
+      function createBalloon() {
+        const group = new THREE.Group();
+        group.name = "balloonMesh";
+        group.position.set(0, 1.12, 0);
+
+        const material = new THREE.MeshPhysicalMaterial({
+          color: 0xd93651,
+          roughness: 0.28,
+          metalness: 0,
+          clearcoat: 0.55,
+          clearcoatRoughness: 0.2,
+          sheen: 0.35,
+          reflectivity: 0.56
+        });
+
+        const body = new THREE.Mesh(new THREE.SphereGeometry(0.56, 48, 36), material);
+        body.scale.set(0.82, 1.05, 0.82);
+        body.castShadow = true;
+        body.receiveShadow = true;
+        body.userData.hitTarget = true;
+        group.add(body);
+
+        const glint = new THREE.Mesh(
+          new THREE.SphereGeometry(0.045, 16, 10),
+          new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 })
+        );
+        glint.position.set(0.16, 0.2, 0.45);
+        glint.scale.set(0.8, 1.2, 0.35);
+        group.add(glint);
+
+        const knot = new THREE.Mesh(
+          new THREE.ConeGeometry(0.13, 0.2, 5),
+          new THREE.MeshPhysicalMaterial({ color: 0x9c1f35, roughness: 0.46, clearcoat: 0.3 })
+        );
+        knot.position.set(0, -0.64, 0);
+        knot.rotation.z = Math.PI;
+        knot.castShadow = true;
+        group.add(knot);
+
+        return group;
+      }
+
+      function createRopes() {
+        ropeGroup.clear();
+
+        const ropeMaterial = new THREE.MeshStandardMaterial({
+          color: 0x7d6045,
+          roughness: 0.84,
+          metalness: 0
+        });
+
+        [
+          { x: -0.34, z: 0.06 },
+          { x: 0.34, z: 0.06 }
+        ].forEach((end) => {
+          const curve = new THREE.CatmullRomCurve3([
+            new THREE.Vector3(0, 0.47, 0),
+            new THREE.Vector3(end.x * 0.34, -0.15, end.z + 0.04),
+            new THREE.Vector3(end.x, -0.92, end.z)
+          ]);
+          const rope = new THREE.Mesh(new THREE.TubeGeometry(curve, 28, 0.012, 8), ropeMaterial);
+          rope.castShadow = true;
+          ropeGroup.add(rope);
+        });
+      }
+
+      function createLetter() {
+        letterGroup.position.set(0, -1.28, 0.04);
+        letterGroup.rotation.x = -0.12;
+
+        const paperTexture = makePaperTexture();
+        const paperMaterial = new THREE.MeshStandardMaterial({
+          map: paperTexture,
+          color: 0xfff1d0,
+          roughness: 0.78,
+          metalness: 0,
+          side: THREE.DoubleSide
+        });
+        const ropeMaterial = new THREE.MeshStandardMaterial({ color: 0x835c40, roughness: 0.8 });
+
+        const roll = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 1.18, 56, 6, false), paperMaterial);
+        roll.name = "paperRoll";
+        roll.rotation.z = Math.PI / 2;
+        roll.scale.set(1, 0.92, 1.04);
+        roll.castShadow = true;
+        roll.receiveShadow = true;
+        letterGroup.add(roll);
+
+        const band = new THREE.Mesh(new THREE.CylinderGeometry(0.255, 0.255, 0.2, 44, 1, true), ropeMaterial);
+        band.name = "paperBand";
+        band.position.set(0.05, 0, 0.004);
+        band.rotation.z = Math.PI / 2;
+        band.castShadow = true;
+        letterGroup.add(band);
+
+        const sheet = new THREE.Mesh(new THREE.PlaneGeometry(1.32, 1.72), paperMaterial);
+        sheet.name = "openSheet";
+        sheet.position.set(0, -0.04, 0.02);
+        sheet.rotation.x = 1.34;
+        sheet.scale.set(0.96, 0.52, 1);
+        sheet.visible = false;
+        sheet.castShadow = true;
+        sheet.receiveShadow = true;
+        letterGroup.add(sheet);
+
+        const wrapA = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.02, 0.026), ropeMaterial);
+        wrapA.name = "wrapA";
+        wrapA.position.set(0.05, 0, 0.27);
+        wrapA.castShadow = true;
+        letterGroup.add(wrapA);
+
+        const wrapB = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.56, 0.026), ropeMaterial);
+        wrapB.name = "wrapB";
+        wrapB.position.set(0.05, 0, 0.28);
+        wrapB.castShadow = true;
+        letterGroup.add(wrapB);
+
+        const knot = new THREE.Mesh(new THREE.SphereGeometry(0.07, 16, 10), ropeMaterial);
+        knot.name = "letterKnot";
+        knot.position.set(0.05, 0, 0.335);
+        knot.scale.set(1.18, 0.66, 0.42);
+        knot.castShadow = true;
+        letterGroup.add(knot);
+      }
+
+      function createClouds() {
+        const cloudMaterial = new THREE.MeshStandardMaterial({
+          color: 0xffffff,
+          roughness: 0.95,
+          transparent: true,
+          opacity: 0.72,
+          depthWrite: false
+        });
+
+        const cloudData = [
+          [-1.45, 2.65, -5.2, 0.86, true], [1.55, 3.8, 1.55, 0.7, false], [2.45, 5.25, -5.8, 0.9, false],
+          [-2.55, 6.45, 1.85, 0.9, false], [-3.2, 8.0, -4.4, 1.06, false], [2.2, 9.25, -6.4, 0.74, false],
+          [3.0, 10.7, 1.35, 1.0, false], [-1.0, 12.2, -7.2, 0.86, false], [-2.5, 13.5, -5.5, 1.05, false],
+          [2.5, 14.9, 1.9, 0.86, false], [3.15, 16.4, -4.2, 0.94, false], [-3.35, 17.8, 1.55, 0.95, false],
+          [-3.1, 19.6, -5.0, 1.08, false], [1.05, 20.8, -7.2, 0.78, false], [2.4, 22.2, 1.65, 0.98, false],
+          [-1.55, 23.8, -6.8, 0.84, false], [0.4, 25.4, -6.2, 1.22, false]
+        ];
+
+        cloudData.forEach(([x, y, z, scale, startsVisible], cloudIndex) => {
+          const cloud = new THREE.Group();
+          cloud.position.set(x, y, z);
+          cloud.scale.setScalar(scale);
+          cloud.userData.baseX = x;
+          cloud.userData.phase = cloudIndex * 0.74;
+          cloud.userData.startsVisible = startsVisible;
+          cloud.userData.front = z > 0;
+
+          const blobs = [
+            [-0.5, 0, 0, 0.52], [0, 0.13, 0.03, 0.72], [0.58, 0.02, -0.04, 0.48],
+            [-0.95, -0.08, -0.08, 0.36], [0.98, -0.12, -0.08, 0.34]
+          ];
+          blobs.forEach(([bx, by, bz, radius]) => {
+            const blob = new THREE.Mesh(new THREE.SphereGeometry(radius, 20, 14), cloudMaterial);
+            blob.position.set(bx, by, bz);
+            blob.scale.y = 0.58;
+            blob.renderOrder = z > 0 ? 8 : 0;
+            cloud.add(blob);
+          });
+          cloudGroup.add(cloud);
+        });
+      }
+
+      function createPhotos() {
+        const positions = [
+          [-3.65, 4.1, -1.55, 0.22], [3.75, 6.5, -2.25, -0.2], [-4.05, 9.1, -1.95, -0.14], [4.05, 11.8, -1.5, 0.18],
+          [-3.45, 14.3, -2.35, 0.12], [3.65, 16.8, -1.8, -0.18], [-4.05, 20.3, -2.1, 0.2], [3.92, 23.0, -1.65, -0.12]
+        ];
+
+        positions.forEach(([x, y, z, rot], index) => {
+          const group = new THREE.Group();
+          group.position.set(x, y, z);
+          group.rotation.z = rot;
+          group.userData.baseX = x;
+          group.userData.phase = index * 0.56;
+
+          const backing = new THREE.Mesh(
+            new THREE.BoxGeometry(2.9, 2.08, 0.055),
+            new THREE.MeshStandardMaterial({ color: 0xfffbf2, roughness: 0.72 })
+          );
+          backing.castShadow = true;
+          backing.receiveShadow = true;
+          group.add(backing);
+
+          const texture = makePhotoTexture(index + 1);
+          const image = new THREE.Mesh(
+            new THREE.PlaneGeometry(2.54, 1.66),
+            new THREE.MeshStandardMaterial({ map: texture, roughness: 0.64, side: THREE.DoubleSide })
+          );
+          image.position.z = 0.032;
+          image.position.y = 0.09;
+          group.add(image);
+
+          photoGroup.add(group);
+        });
+      }
+
+      function createBurstParticles() {
+        const colors = [0xff8395, 0xd93651, 0x8f1930, 0xffb0b9];
+        for (let i = 0; i < 34; i += 1) {
+          const shard = new THREE.Mesh(
+            new THREE.TetrahedronGeometry(0.06 + Math.random() * 0.04, 0),
+            new THREE.MeshStandardMaterial({ color: colors[i % colors.length], roughness: 0.48, metalness: 0 })
+          );
+          const angle = (i / 34) * Math.PI * 2;
+          const speed = 1.4 + Math.random() * 2.2;
+          shard.userData.initialVelocity = new THREE.Vector3(Math.cos(angle) * speed, (Math.random() - 0.2) * 2.1, Math.sin(angle) * speed);
+          shard.userData.velocity = shard.userData.initialVelocity.clone();
+          shard.userData.spin = new THREE.Vector3(Math.random() * 5, Math.random() * 5, Math.random() * 5);
+          shard.visible = false;
+          burstParticles.add(shard);
+        }
+      }
+
+      function makePaperTexture() {
+        const textureCanvas = document.createElement("canvas");
+        textureCanvas.width = 512;
+        textureCanvas.height = 512;
+        const ctx = textureCanvas.getContext("2d");
+        const gradient = ctx.createLinearGradient(0, 0, 512, 512);
+        gradient.addColorStop(0, "#fff8e6");
+        gradient.addColorStop(1, "#e7c68f");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 512, 512);
+        ctx.globalAlpha = 0.16;
+        for (let i = 0; i < 850; i += 1) {
+          ctx.fillStyle = i % 2 ? "#805a32" : "#ffffff";
+          ctx.fillRect(Math.random() * 512, Math.random() * 512, Math.random() * 2 + 0.5, Math.random() * 2 + 0.5);
+        }
+        ctx.globalAlpha = 0.2;
+        ctx.strokeStyle = "#8c6339";
+        for (let y = 40; y < 512; y += 36) {
+          ctx.beginPath();
+          ctx.moveTo(36, y + Math.sin(y) * 2);
+          ctx.lineTo(476, y + Math.cos(y) * 2);
+          ctx.stroke();
+        }
+        const texture = new THREE.CanvasTexture(textureCanvas);
+        texture.colorSpace = THREE.SRGBColorSpace;
+        return texture;
+      }
+
+      function makePhotoTexture(number) {
+        const textureCanvas = document.createElement("canvas");
+        textureCanvas.width = 512;
+        textureCanvas.height = 360;
+        const ctx = textureCanvas.getContext("2d");
+
+        drawPhotoPlaceholder(ctx, number);
+        const texture = new THREE.CanvasTexture(textureCanvas);
+        texture.colorSpace = THREE.SRGBColorSpace;
+
+        const image = new Image();
+        image.crossOrigin = "anonymous";
+        image.onload = () => {
+          ctx.clearRect(0, 0, textureCanvas.width, textureCanvas.height);
+          const ratio = Math.max(textureCanvas.width / image.width, textureCanvas.height / image.height);
+          const width = image.width * ratio;
+          const height = image.height * ratio;
+          ctx.drawImage(image, (textureCanvas.width - width) / 2, (textureCanvas.height - height) / 2, width, height);
+          texture.needsUpdate = true;
+        };
+        image.onerror = () => {
+          drawPhotoPlaceholder(ctx, number);
+          texture.needsUpdate = true;
+        };
+        image.src = `assets/note-link-001/photo-${number}.jpg`;
+
+        return texture;
+      }
+
+      function drawPhotoPlaceholder(ctx, number) {
+        const gradient = ctx.createLinearGradient(0, 0, 512, 360);
+        gradient.addColorStop(0, "#f7c9cb");
+        gradient.addColorStop(0.55, "#d7eefc");
+        gradient.addColorStop(1, "#fff0bb");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 512, 360);
+        ctx.fillStyle = "rgba(255,255,255,0.45)";
+        ctx.beginPath();
+        ctx.arc(132, 92, 58, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(83,65,55,0.68)";
+        ctx.font = "600 38px system-ui, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(`Photo ${number}`, 256, 185);
+      }
+
+      function resize() {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        renderer.setSize(width, height, false);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        state.viewportScale = width < 680 ? 0.82 : 1;
+        flightGroup.scale.setScalar(state.viewportScale);
+      }
+
+      function onPointerDown(event) {
+        if (state.mode !== "idle" && state.mode !== "pulling") {
+          return;
+        }
+
+        updatePointer(event);
+        raycaster.setFromCamera(pointer, camera);
+        const hits = raycaster.intersectObjects(balloonMesh.children, true);
+        if (!hits.some((hit) => hit.object.userData.hitTarget)) {
+          return;
+        }
+
+        state.mode = "pulling";
+        state.activePointerId = event.pointerId;
+        state.dragStartY = event.clientY;
+        state.pull = 0;
+        canvas.setPointerCapture(event.pointerId);
+        stage.classList.add("is-dragging");
+      }
+
+      function onPointerMove(event) {
+        if (state.activePointerId !== event.pointerId) {
+          return;
+        }
+
+        state.pull = Math.max(0, Math.min(1, (event.clientY - state.dragStartY) / 120));
+        stage.classList.add("started");
+      }
+
+      function onPointerUp(event) {
+        if (state.activePointerId !== event.pointerId) {
+          return;
+        }
+
+        canvas.releasePointerCapture(event.pointerId);
+        stage.classList.remove("is-dragging");
+        state.activePointerId = null;
+
+        if (state.pull > 0.42) {
+          startAscending();
+        } else {
+          state.mode = "idle";
+          state.pull = 0;
+          stage.classList.remove("started");
+        }
+      }
+
+      function onPointerCancel() {
+        stage.classList.remove("is-dragging");
+        state.activePointerId = null;
+        if (state.mode === "pulling") {
+          state.mode = "idle";
+          state.pull = 0;
+          stage.classList.remove("started");
+        }
+      }
+
+      function updatePointer(event) {
+        const rect = canvas.getBoundingClientRect();
+        pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      }
+
+      function startAscending() {
+        state.mode = "ascending";
+        state.elapsed = 0;
+        state.pull = 0;
+        state.flightStartY = flightGroup.position.y;
+        updateFlightDays();
+        stage.classList.add("started");
+      }
+
+      function updateFlightDays() {
+        const start = new Date(2026, 7, 6);
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const diff = Math.max(0, Math.floor((today - start) / 86400000));
+        flightDays.textContent = String(diff);
+      }
+
+      function resetScene() {
+        state.mode = "idle";
+        state.elapsed = 0;
+        state.pull = 0;
+        state.activePointerId = null;
+        state.burstStarted = false;
+        state.opened = false;
+        stage.classList.remove("started", "opened", "is-dragging", "no-webgl");
+
+        flightGroup.position.set(0, 0, 0);
+        flightGroup.rotation.set(0, 0, 0);
+        balloonMesh.visible = true;
+        balloonMesh.scale.set(1, 1, 1);
+        ropeGroup.visible = true;
+        ropeGroup.rotation.set(0, 0, 0);
+        letterGroup.position.set(0, -1.28, 0.04);
+        letterGroup.rotation.set(-0.12, 0, 0);
+        letterGroup.scale.set(1, 1, 1);
+        letterGroup.getObjectByName("openSheet").visible = false;
+        letterGroup.getObjectByName("openSheet").rotation.x = 1.34;
+        letterGroup.getObjectByName("openSheet").scale.set(0.96, 0.52, 1);
+        letterGroup.getObjectByName("paperRoll").visible = true;
+        letterGroup.getObjectByName("paperBand").visible = true;
+        letterGroup.getObjectByName("wrapA").visible = true;
+        letterGroup.getObjectByName("wrapB").visible = true;
+        letterGroup.getObjectByName("letterKnot").visible = true;
+
+        burstParticles.children.forEach((shard) => {
+          shard.visible = false;
+          shard.position.set(0, 1.1, 0);
+          shard.rotation.set(0, 0, 0);
+          shard.userData.velocity.copy(shard.userData.initialVelocity);
+          shard.material.opacity = 1;
+          shard.material.transparent = false;
+        });
+
+        camera.position.set(window.innerWidth < 680 ? 0 : 0.28, 0.2, window.innerWidth < 680 ? 6.2 : 7.1);
+        cameraLook.set(0, 0.12, 0);
+        camera.lookAt(cameraLook);
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+        const delta = Math.min(clock.getDelta(), 0.033);
+        const time = clock.elapsedTime;
+
+        updateState(delta, time);
+        updateWorld(time);
+        updateCamera(delta);
+        renderer.render(scene, camera);
+      }
+
+      function updateState(delta, time) {
+        if (state.mode === "idle") {
+          flightGroup.position.y += (0 - flightGroup.position.y) * 0.09;
+          flightGroup.rotation.z = Math.sin(time * 1.1) * 0.035;
+        }
+
+        if (state.mode === "pulling") {
+          flightGroup.position.y = -state.pull * 0.7;
+          flightGroup.rotation.z = -state.pull * 0.12 + Math.sin(time * 3) * 0.015;
+          balloonMesh.scale.set(1 + state.pull * 0.03, 1 - state.pull * 0.04, 1 + state.pull * 0.03);
+        }
+
+        if (state.mode === "ascending") {
+          state.elapsed += delta;
+          const duration = reducedMotion ? 1.2 : 13.8;
+          const progress = Math.min(1, state.elapsed / duration);
+          const eased = easeInOutCubic(progress);
+          flightGroup.position.y = state.flightStartY + (state.flightTargetY - state.flightStartY) * eased;
+          flightGroup.position.x = Math.sin(progress * Math.PI * 4) * 0.18;
+          flightGroup.rotation.z = Math.sin(progress * Math.PI * 5) * 0.11;
+          balloonMesh.scale.setScalar(1);
+
+          if (progress >= 1) {
+            state.mode = "burst";
+            state.elapsed = 0;
+          }
+        }
+
+        if (state.mode === "burst") {
+          state.elapsed += delta;
+          const pulse = Math.sin(state.elapsed * 34) * 0.04;
+          balloonMesh.scale.set(1.05 + pulse + state.elapsed * 0.35, 0.92 - pulse, 1.05 + pulse);
+
+          if (!state.burstStarted && state.elapsed > (reducedMotion ? 0.15 : 0.65)) {
+            state.burstStarted = true;
+            balloonMesh.visible = false;
+            ropeGroup.visible = false;
+            burstParticles.children.forEach((shard) => {
+              shard.visible = true;
+              shard.position.set(flightGroup.position.x, flightGroup.position.y + 1.12, 0);
+              shard.material.transparent = true;
+            });
+          }
+
+          updateBurst(delta);
+
+          if (state.elapsed > (reducedMotion ? 0.35 : 1.6)) {
+            state.mode = "opening";
+            state.elapsed = 0;
+            ropeGroup.visible = false;
+            letterGroup.getObjectByName("openSheet").visible = true;
+            letterGroup.getObjectByName("paperRoll").visible = false;
+            letterGroup.getObjectByName("paperBand").visible = false;
+            letterGroup.getObjectByName("wrapA").visible = false;
+            letterGroup.getObjectByName("wrapB").visible = false;
+            letterGroup.getObjectByName("letterKnot").visible = false;
+          }
+        }
+
+        if (state.mode === "opening") {
+          state.elapsed += delta;
+          const progress = Math.min(1, state.elapsed / (reducedMotion ? 0.35 : 2.2));
+          const eased = easeOutBack(progress);
+          const sheet = letterGroup.getObjectByName("openSheet");
+
+          letterGroup.position.lerp(new THREE.Vector3(0, -0.04, 0.55), 0.065);
+          letterGroup.rotation.x += (0.06 - letterGroup.rotation.x) * 0.07;
+          letterGroup.rotation.y += (0 - letterGroup.rotation.y) * 0.08;
+          letterGroup.scale.lerp(new THREE.Vector3(1.18, 1.18, 1.18), 0.06);
+          sheet.rotation.x = 1.34 + (0 - 1.34) * eased;
+          sheet.scale.set(0.98, 0.52 + 0.58 * eased, 1);
+
+          if (progress >= 1 && !state.opened) {
+            state.opened = true;
+            state.mode = "opened";
+            stage.classList.add("opened");
+          }
+        }
+
+        if (state.mode === "opened") {
+          letterGroup.rotation.z = Math.sin(time * 0.8) * 0.01;
+          updateBurst(delta);
+        }
+      }
+
+      function updateBurst(delta) {
+        burstParticles.children.forEach((shard) => {
+          if (!shard.visible) {
+            return;
+          }
+          shard.position.addScaledVector(shard.userData.velocity, delta);
+          shard.userData.velocity.y -= delta * 1.5;
+          shard.rotation.x += shard.userData.spin.x * delta;
+          shard.rotation.y += shard.userData.spin.y * delta;
+          shard.rotation.z += shard.userData.spin.z * delta;
+          shard.material.opacity = Math.max(0, shard.material.opacity - delta * 0.65);
+        });
+      }
+
+      function updateWorld(time) {
+        const revealMemoryLayer = state.mode !== "idle" && state.mode !== "pulling";
+        cloudGroup.children.forEach((cloud) => {
+          cloud.visible = revealMemoryLayer || cloud.userData.startsVisible;
+          cloud.position.x = cloud.userData.baseX + Math.sin(time * 0.34 + cloud.userData.phase) * 0.18;
+          cloud.rotation.y = Math.sin(time * 0.18 + cloud.userData.phase) * 0.12;
+        });
+
+        photoGroup.children.forEach((photo) => {
+          photo.visible = revealMemoryLayer;
+          photo.position.x = photo.userData.baseX + Math.sin(time * 0.28 + photo.userData.phase) * 0.12;
+          photo.lookAt(camera.position);
+          photo.rotation.z += Math.sin(time * 0.45 + photo.userData.phase) * 0.002;
+        });
+      }
+
+      function updateCamera(delta) {
+        const followY = flightGroup.position.y;
+        const mobile = window.innerWidth < 680;
+        const targetPosition = new THREE.Vector3(
+          mobile ? 0 : 0.28,
+          followY + (state.mode === "opened" ? -0.02 : 0.2),
+          mobile ? 6.2 : 7.1
+        );
+        const lookTarget = new THREE.Vector3(
+          flightGroup.position.x * 0.45,
+          followY + (state.mode === "opened" ? -0.12 : 0.12),
+          0
+        );
+
+        camera.position.lerp(targetPosition, 1 - Math.pow(0.001, delta));
+        cameraLook.lerp(lookTarget, 1 - Math.pow(0.002, delta));
+        camera.lookAt(cameraLook);
+      }
+
+      function easeInOutCubic(value) {
+        return value < 0.5 ? 4 * value * value * value : 1 - Math.pow(-2 * value + 2, 3) / 2;
+      }
+
+      function easeOutBack(value) {
+        const c1 = 1.70158;
+        const c3 = c1 + 1;
+        return 1 + c3 * Math.pow(value - 1, 3) + c1 * Math.pow(value - 1, 2);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -80,6 +80,8 @@ http://127.0.0.1:8000/note-link-001.html
 ## 当前页面
 
 - `index.html`: 主页。
+- `note-link-001.html`: 第一个附加网页，Three.js 气球带着信纸飞上云端，最后打开待填充信纸。
+- `assets/note-link-001/`: 第一个附加网页的照片与纹理资源目录，照片可按 `photo-1.jpg` 到 `photo-8.jpg` 命名。
 - `paper-note-template.txt`: 纸质字条里附加链接的文字模板。
 
 ## 给后续 agent 的注意事项
