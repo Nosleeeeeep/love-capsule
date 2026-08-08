@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#fff6ed">
+  <meta name="theme-color" content="#fff8ef">
   <title>飞上云端的信</title>
   <style>
     @font-face {
@@ -21,7 +21,7 @@
       --glass: rgba(255, 255, 255, 0.54);
       font-family: Georgia, "Times New Roman", "Noto Serif SC", serif;
       color: var(--ink);
-      background: #d9f2ff;
+      background: #fff8ef;
     }
 
     * {
@@ -327,14 +327,15 @@
         color-scheme: light;
       }
 
+      :root,
       html {
-        background: #fff6ed;
+        background: #fff8ef;
       }
 
       body {
         background:
           radial-gradient(circle at 76% 15%, rgba(255, 246, 203, 0.7), rgba(255, 225, 174, 0.22) 18%, transparent 34%),
-          linear-gradient(180deg, #f3fbff 0%, #fff8ef 53%, #ffe3ca 100%);
+          linear-gradient(180deg, #fffaf2 0%, #fff8ef 53%, #ffe3ca 100%);
       }
 
       .letter-panel {
@@ -672,14 +673,14 @@
 
       function createPhotos() {
         const positions = [
-          { desktop: [-3.65, 4.1, -1.55, 0.22], mobile: [-1.22, 4.05, -1.25, 0.14] },
-          { desktop: [3.75, 6.5, -2.25, -0.2], mobile: [1.24, 6.25, -1.2, -0.13] },
-          { desktop: [-4.05, 9.1, -1.95, -0.14], mobile: [-1.28, 8.65, -1.18, -0.1] },
-          { desktop: [4.05, 11.8, -1.5, 0.18], mobile: [1.3, 11.1, -1.15, 0.12] },
-          { desktop: [-3.45, 14.3, -2.35, 0.12], mobile: [-1.2, 13.65, -1.25, 0.1] },
-          { desktop: [3.65, 16.8, -1.8, -0.18], mobile: [1.22, 16.1, -1.18, -0.12] },
-          { desktop: [-4.05, 20.3, -2.1, 0.2], mobile: [-1.28, 19.25, -1.2, 0.13] },
-          { desktop: [3.92, 23.0, -1.65, -0.12], mobile: [1.26, 21.8, -1.14, -0.1] }
+          { desktop: [-3.65, 4.1, -1.55, 0.22], mobile: [-0.52, 4.05, -1.5, 0.08] },
+          { desktop: [3.75, 6.5, -2.25, -0.2], mobile: [0.54, 6.25, -1.48, -0.07] },
+          { desktop: [-4.05, 9.1, -1.95, -0.14], mobile: [-0.56, 8.65, -1.5, -0.05] },
+          { desktop: [4.05, 11.8, -1.5, 0.18], mobile: [0.58, 11.1, -1.46, 0.07] },
+          { desktop: [-3.45, 14.3, -2.35, 0.12], mobile: [-0.5, 13.65, -1.52, 0.05] },
+          { desktop: [3.65, 16.8, -1.8, -0.18], mobile: [0.52, 16.1, -1.5, -0.06] },
+          { desktop: [-4.05, 20.3, -2.1, 0.2], mobile: [-0.56, 19.25, -1.51, 0.07] },
+          { desktop: [3.92, 23.0, -1.65, -0.12], mobile: [0.54, 21.8, -1.48, -0.05] }
         ];
 
         positions.forEach(({ desktop, mobile }, index) => {
@@ -834,7 +835,7 @@
         photoGroup.children.forEach((photo) => {
           const [x, y, z, rot] = mobile ? photo.userData.mobilePosition : photo.userData.desktopPosition;
           photo.position.set(x, y, z);
-          photo.scale.setScalar(mobile ? 0.86 : 1);
+          photo.scale.setScalar(mobile ? 0.48 : 1);
           photo.userData.baseX = x;
           photo.userData.baseRotation = rot;
         });
