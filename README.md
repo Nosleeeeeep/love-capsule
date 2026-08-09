@@ -19,20 +19,21 @@ https://github.com/Nosleeeeeep/love-capsule
 ## 文件放置规则
 
 - `index.html` 是主页，可以放所有附加网页的入口链接。
-- 每个独立附加网页放在仓库根目录，可以用 `note-link-001.html`、`note-link-002.html` 这种命名。
-- 如果添加图片、音频或其他资源，新建 `assets/` 目录，并按页面分文件夹保存，例如 `assets/note-link-001/photo-1.jpg`。
+- 每个独立附加网页单独放一个文件夹，例如 `note-link-001/index.html`、`note-link-002/index.html`。
+- 每个网页自己的图片、音频、字体或其他资源放在该网页文件夹内的 `assets/`，例如 `note-link-001/assets/photo-1.jpg`。
+- 如果需要兼容已经发出去的旧链接，可以在根目录保留一个轻量跳转页，例如 `note-link-001.html` 跳转到 `note-link-001/`。
 - 不要提交 `.tools/`，它只是本地临时工具目录，已经在 `.gitignore` 中忽略。
 
 新增网页示例：
 
 ```text
-note-link-001.html
+note-link-001/
 ```
 
 发布后的访问地址会是：
 
 ```text
-https://nosleeeeeep.github.io/love-capsule/note-link-001.html
+https://nosleeeeeep.github.io/love-capsule/note-link-001/
 ```
 
 ## 部署方式
@@ -74,19 +75,20 @@ python -m http.server 8000 --bind 127.0.0.1
 然后访问：
 
 ```text
-http://127.0.0.1:8000/note-link-001.html
+http://127.0.0.1:8000/note-link-001/
 ```
 
 ## 当前页面
 
 - `index.html`: 主页。
-- `note-link-001.html`: 第一个附加网页，Three.js 气球带着信纸飞上云端，最后打开待填充信纸。
-- `assets/note-link-001/`: 第一个附加网页的照片与纹理资源目录，照片可按 `photo-1.jpg` 到 `photo-8.jpg` 命名。
+- `note-link-001/`: 第一个附加网页目录，Three.js 气球带着信纸飞上云端，最后打开信纸。
+- `note-link-001/assets/`: 第一个附加网页的照片、字体与纹理资源目录，照片可按 `photo-1.jpg` 到 `photo-8.jpg` 命名。
+- `note-link-001.html`: 旧链接兼容跳转页，会自动跳到 `note-link-001/`。
 - `paper-note-template.txt`: 纸质字条里附加链接的文字模板。
 
 ## 给后续 agent 的注意事项
 
-- 保持所有链接相对路径可用，例如从主页链接到 `note-link-001.html`。
+- 保持所有链接相对路径可用，例如从主页链接到 `note-link-001/`。
 - 新增页面后，同步更新 `index.html` 的入口和本 README 的“当前页面”列表。
 - 不要把网页当作纸质字条的替代品；用户已经写了纸质字条，网页只是部分纸条上的链接附加内容。
 - 公开仓库和 GitHub Pages 页面都是公开可访问的，不要放真实住址、手机号、身份证、私密账号或其他敏感信息。
